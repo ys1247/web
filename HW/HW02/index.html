@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>화면 분할</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="d_container">
+        <div id="d_top">
+            <div id="d_student_info">
+                <span id="d_student_id">202327026</span>
+                <span id="d_student_name">박윤서</span>
+            </div>
+        </div>
+        <div id="d_content">
+            <div id="d_left">
+                <div class="d_button_container">
+                    <button class="d_button" onclick="drawCircle()">버튼1</button>
+                    <button class="d_button" onclick="displayGameInfo()">버튼2</button>
+                </div>
+            </div>
+            <div id="d_right">빈화면</div>
+        </div>
+    </div>
+
+    <script>
+        // 버튼 1을 클릭할 때 Canvas에 원 그리기
+        function drawCircle() {
+            var canvas = document.createElement('canvas');
+            canvas.width = 400; // Canvas 너비
+            canvas.height = 400; // Canvas 높이
+            var context = canvas.getContext('2d');
+            context.beginPath();
+            context.arc(200, 200, 150, 0, 2 * Math.PI); // 원 그리기
+            context.fillStyle = 'red'; // 원 색상
+            context.fill();
+            document.getElementById('d_right').innerHTML = ''; // 이전 내용 지우기
+            document.getElementById('d_right').appendChild(canvas); // Canvas 추가
+        }
+
+        // 버튼 2를 클릭할 때 게임 정보 출력
+        function displayGameInfo() {
+            var gameName = '유희왕 마스터 듀얼'; // 게임 이름
+            var releaseYear = '출시 년도: 2022'; // 출시 년도
+            var genre = '장르:TCG'; // 장르
+            var reason = '좋아하는 이유: 오프라인은 룰미스나 복잡한 재정 악성 비매너떔에 하기가 힘든데 게임에서는 저런일이 생기지 않아서'; // 좋아하는 이유
+
+            var gameInfo = document.createElement('div');
+
+            var screenshot = document.createElement('img');
+            screenshot.src = 'game_screenshot.jpg'; // 게임 스샷 이미지 경로
+            screenshot.className = 'game_screenshot';
+
+            var nameElement = document.createElement('p');
+            nameElement.textContent = gameName;
+
+            var releaseYearElement = document.createElement('p');
+            releaseYearElement.textContent = releaseYear;
+
+            var genreElement = document.createElement('p');
+            genreElement.textContent = genre;
+
+            var reasonElement = document.createElement('p');
+            reasonElement.textContent = reason;
+
+            gameInfo.appendChild(screenshot);
+            gameInfo.appendChild(nameElement);
+            gameInfo.appendChild(releaseYearElement);
+            gameInfo.appendChild(genreElement);
+            gameInfo.appendChild(reasonElement);
+
+            document.getElementById('d_right').innerHTML = ''; // 이전 내용 지우기
+            document.getElementById('d_right').appendChild(gameInfo); // 게임 정보 추가
+        }
+    </script>
+</body>
+</html>
