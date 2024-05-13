@@ -7,9 +7,16 @@ const height = canvas.clientHeight * 2;
 canvas.width = width;
 canvas.height = height;
 
+let playerHP = 3; // 플레이어의 HP
 let isGameStarted = false; // 게임 시작 여부를 추적하는 변수
 let heartX = 0; // 하트의 x 좌표
 let heartY = 0; // 하트의 y 좌표
+
+// 플레이어의 위치 및 반지름 설정
+const playerX = width / 2; // 가로 중앙
+const playerY = height / 2; // 세로 중앙
+const playerRadius = 20; // 반지름 설정
+
 
 // 별 그리기 함수
 function drawStar() {
@@ -27,8 +34,8 @@ function drawStar() {
     ];
 
     // 별의 중심 좌표 계산
-    const centerX = (width - 50) / 2; // 별의 크기는 50x50으로 가정
-    const centerY = (height - 50) / 2;
+    const centerX = (width - 100) / 2; 
+    const centerY = (height - 80) / 2;
 
     ctx.beginPath();
     for (const point of starPoints) {
@@ -44,13 +51,55 @@ function drawStar() {
     ctx.stroke();
 }
 
+// Circle 클래스 정의
+class Circle {
+    constructor(x, y, radius) {
+        this.x = x;
+        this.y = y;
+        this.radius = radius;
+    }
+
+    // 원과 원이 충돌하는지 확인하는 메서드
+    collidesWith(otherCircle) {
+        const dx = this.x - otherCircle.x;
+        const dy = this.y - otherCircle.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        return distance < this.radius + otherCircle.radius;
+    }
+
+    // 원의 테두리 그리기 메서드
+    drawBorder() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.strokeStyle = 'black'; // 테두리 색상을 검은색으로 설정
+        ctx.lineWidth = 2; // 테두리 두께 설정
+        ctx.stroke();
+    }
+}
+
+// 별의 중심 좌표와 반지름 설정
+const starCenterX = (width - 100) / 2;
+const starCenterY = (height - 80) / 2;
+const starRadius = 40;
+
+// 플레이어의 Circle Collider 설정
+const playerCollider = new Circle(playerX, playerY, playerRadius);
+
+// 별과 플레이어의 충돌 여부 확인
+const isColliding = playerCollider.collidesWith(new Circle(starCenterX, starCenterY, playerRadius)); // 플레이어의 반지름과 동일하게 설정
+
+
+
 // 게임 화면 그리기 함수
 function drawGameScreen() {
     ctx.clearRect(0, 0, canvas.width, canvas.height); // Canvas를 clear
     drawStar(); // 별 그리기 함수 호출
     drawHeart(heartX, heartY); // 하트 그리기 함수 호출
     drawEnemies(); // 적군 그리기 함수 호출
+    playerCollider.drawBorder(); // 플레이어의 Circle Collider 테두리 그리기
 }
+
+
 
 // 시작 버튼 생성
 const startButton = document.createElement('button');
@@ -188,9 +237,74 @@ function gameLoop() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         drawGameScreen();
         updateEnemies();
+        checkCollision(); // 충돌 검사 함수 호출
         requestAnimationFrame(gameLoop);
     }
 }
+
+// 충돌 검사 함수
+function checkCollision() {
+    enemies.forEach(enemy => {
+        const dx = enemy.x - canvas.width / 2;
+        const dy = enemy.y - canvas.height / 2;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance < enemy.size + 25) { // 충돌 판정
+            playerHP--; // 플레이어 HP 감소
+            if (playerHP <= 0) {
+                isGameStarted = false;
+                drawGameOverScreen(); // 게임 종료 시 게임 오버 화면 그리기
+            }
+        }
+    });
+}
+
+// 게임 오버 화면 그리기 함수
+function drawGameOverScreen() {
+    ctx.fillStyle = 'skyblue';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.font = '50px Arial';
+    ctx.fillStyle = 'white';
+    ctx.textAlign = 'center';
+    const WIDTH = canvas.width / 2;
+    const HEIGHT = canvas.height / 2;
+    ctx.fillText('죽었다', WIDTH, HEIGHT - 100);
+    ctx.fillText('이제자유다', WIDTH, HEIGHT - 20);
+
+    // 재시작 버튼 생성
+const restartButton = document.createElement('button');
+restartButton.textContent = '시작';
+document.body.appendChild(restartButton);
+restartButton.style.position = 'absolute';
+restartButton.style.top = 'calc(50% + 90px)';
+restartButton.style.left = '50%';
+restartButton.style.transform = 'translate(-50%, -50%)';
+restartButton.style.color = 'black';
+restartButton.style.fontSize = '24px';
+restartButton.style.width = '180px';
+restartButton.style.height = '60px';
+restartButton.style.backgroundColor = 'white'; // 초기 색상을 하얀색으로 설정
+
+// 재시작 버튼 마우스 오버 이벤트 핸들러
+restartButton.addEventListener('mouseover', function() {
+    restartButton.style.backgroundColor = 'orange'; // 마우스를 가져갔을 때 배경색을 주황색으로 변경
+});
+
+// 재시작 버튼 클릭 이벤트 핸들러
+restartButton.addEventListener('click', function() {
+    restartButton.style.backgroundColor = 'blue'; // 클릭시 버튼 색상을 하얀색으로 변경
+    setTimeout(() => {
+        isGameStarted = true; // 게임 다시 시작
+        playerHP = 3; // 플레이어 HP 초기화
+        enemies = []; // 적군 배열 초기화
+        startButton.style.display = 'none'; // 시작 버튼 숨김
+        createEnemies(); // 적군 생성
+        requestAnimationFrame(gameLoop); // 게임 루프 다시 시작
+        restartButton.style.display = 'none'; // 재시작 버튼 숨김
+    }, 1000);
+});
+}
+
 
 // 페이지 로드 시 타이틀 화면 그리기
 drawTitleScreen();
